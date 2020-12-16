@@ -2,12 +2,13 @@
 Tools and various scripts used to support CyberPatriot
 
 ## Syntax
-Initialize-CyberPatriotCloud -resourceGroupName "MyResource" -resourceGroupLocation "azurelocation" -vmUserName "AdminUserName" -vmUserPassword "SomeSecurePassword"
+```Initialize-CyberPatriotCloud -resourceGroupName "MyResource" -resourceGroupLocation "azurelocation" -vmUserName "AdminUserName" -vmUserPassword "SomeSecurePassword"```
 
 ## Example
-Initialize-CyberPatriotCloud -resourceGroupName CyberPatriotTeam -resourceGroupLocation eastus -vmUserName CyberAdmin -vmUserPassword "D6xYwk5hX5c!Kr^y@uae"
+```Initialize-CyberPatriotCloud -resourceGroupName CyberPatriotTeam -resourceGroupLocation eastus -vmUserName CyberAdmin -vmUserPassword "D6xYwk5hX5c!Kr^y@uae"```
 
 ## Expected Output
+```
 --------------------  Beginning Initialization  ---------------------
 This could take a few minutes, feel free to go top off the coffee
 
@@ -24,7 +25,7 @@ Remove-AzResourceGroup -Name CyberPatriotTeam -Force -AsJob
 
 To access your resources online, go to the following url:
 hxxps://cyberpatriotteam-256795467.eastus.cloudapp.azure.com
-
+```
 ## Current Limitations
 Will only spin up the virtual machines in Azure. Will not configure Apache Guacamole to connect to the host machines nor setup the host machines with the required VMWare Player and zip files. These features will be implemented in the next release.
 
