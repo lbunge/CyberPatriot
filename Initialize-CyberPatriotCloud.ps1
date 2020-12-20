@@ -1,43 +1,42 @@
 ﻿<#
 .Synopsis
-   Short description
+   PowerShell script to build out virtual machines for CyberPatriot in Azure Cloud
 .DESCRIPTION
-   Long description
+   This PowerShell script takes an array of hostnames ["Host-Win","Host-Server","Host-Linux","Host-Cisco","Guacamole"]
+   and creates virtual machines in Azure Cloud based on a pre-determined configuration. The host machines are located
+   on an internal network with the Guacamole machine utilizing Apache Guacamole with a public IP address to connect to
+   the internal machines.
 .EXAMPLE
-   Example of how to use this cmdlet
-.EXAMPLE
-   Another example of how to use this cmdlet
+   Initialize-CyberPatriotCloud -resourceGroupName CyberPatriot -resourceGroupLocation eastus -vmUserName CyberAdmin -vmUserPassword SomeS3cr3tP@ssw0rd!
 #>
 function Initialize-CyberPatriotCloud
 {
     [CmdletBinding()]
     Param
     (
-        # Param1 help description
-        [Parameter(Mandatory=$true,
-                   ValueFromPipelineByPropertyName=$true
+        # Name for Resource Group
+        [Parameter(ValueFromPipelineByPropertyName=$true
         )]
         [string]
-        $resourceGroupName,
+        $resourceGroupName = "CyberPatriot",
         
-        # Param2 help description
-        [Parameter(Mandatory=$true,
-                   ValueFromPipelineByPropertyName=$true
+        # Location in Azure
+        [Parameter(ValueFromPipelineByPropertyName=$true
         )]
         [string]
-        $resourceGroupLocation,
+        $resourceGroupLocation = "eastus",
 
-        [Parameter(Mandatory=$true,
-                   ValueFromPipelineByPropertyName=$true
+        # Administrator account in VM's
+        [Parameter(ValueFromPipelineByPropertyName=$true
         )]
         [string]
-        $vmUserName,
+        $vmUserName = "CyberAdmin",
 
-        [Parameter(Mandatory=$true,
-                   ValueFromPipelineByPropertyName=$true
+        # Administrator password in VM's.
+        [Parameter(ValueFromPipelineByPropertyName=$true
         )]
         [string]
-        $vmUserPassword
+        $vmUserPassword = "Cyb3rP@tri0t!"
     )
     Begin
     {
@@ -53,7 +52,6 @@ function Initialize-CyberPatriotCloud
             if (Get-InstalledModule -Name Az){
             } else {
                 Install-Module -Name Az -AllowClobber -Scope CurrentUser
-                Import-Module -Name Az
             }# End if
         }# End if
 
@@ -64,7 +62,7 @@ function Initialize-CyberPatriotCloud
     {
         Write-Host "--------------------  Beginning Initialization  ---------------------" -ForegroundColor Cyan
         Write-Host "This could take a few minutes, feel free to go top off the coffee" -ForegroundColor Cyan
-        $resourceGroup = New-AzResourceGroup -Name $resourceGroupName -Location $resourceGroupLocation
+        New-AzResourceGroup -Name $resourceGroupName -Location $resourceGroupLocation -InformationAction SilentlyContinue
         $vmLocalAdminUser = $vmUserName
         $vmLocalAdminSecurePassword = $vmUserPassword | ConvertTo-SecureString -AsPlainText -Force
         $vmSize = "Standard_D2_v4" # 2-core 8gb RAM
@@ -170,7 +168,7 @@ function Initialize-CyberPatriotCloud
                 $vm = Add-AzVMNetworkInterface `
                     -VM $vm `
                     -Id $NIC.Id
-                New-AzVM -ResourceGroupName $resourceGroupName -Location $resourceGroupLocation -VM $vm -WarningAction Ignore
+                New-AzVM -ResourceGroupName $resourceGroupName -Location $resourceGroupLocation -VM $vm -WarningAction Ignore -InformationAction SilentlyContinue
         }
     }
     End
@@ -183,3 +181,5 @@ function Initialize-CyberPatriotCloud
         Write-Host "https://$((Get-AzPublicIpAddress -name $publicIP.Name -ResourceGroupName $resourceGroupName).DnsSettings.Fqdn)"
     }
 }
+
+Initialize-CyberPatriotCloud
