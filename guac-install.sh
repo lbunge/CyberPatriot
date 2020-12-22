@@ -1072,7 +1072,7 @@ sed -i 's/\x1b\[[0-9;]*m\|\x1b[(]B\x1b\[m//g' ${logfile}
 ######  INSTALLATION EXECUTION  ######################################
 # Runs the install if the option was selected from the summary menu
 #tput sgr0 >&3
-clear >&3
+#clear >&3
 reposinstall
 if [ $DEL_TMP_VAR = true ]; then
 	rm "$VAR_FILE"
