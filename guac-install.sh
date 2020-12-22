@@ -199,7 +199,7 @@ fi
 #Set background process id value to -1 representing no background process running to err_handler
 echo "-1" > "${VAR_FILE}"
 
-tput sgr0 >&3
+#tput sgr0 >&3
 }
 
 ######  SPECIAL ECHO FUNCTION  #######################################
@@ -258,7 +258,7 @@ fi
 # Log cleanup to remove escape sequences caused by tput for formatting text
 sed -i 's/\x1b\[[0-9;]*m\|\x1b[(]B\x1b\[m//g' ${logfile}
 
-tput sgr0 >&3
+#tput sgr0 >&3
 exit $EXITCODE
 }
 
@@ -1066,12 +1066,12 @@ s_echo "y" "${Bold}Contact ${Reset}${ADM_POC}${Bold} with any questions or conce
 # Log cleanup to remove escape sequences caused by tput for formatting text
 sed -i 's/\x1b\[[0-9;]*m\|\x1b[(]B\x1b\[m//g' ${logfile}
 
-tput sgr0 >&3
+#tput sgr0 >&3
 }
 
 ######  INSTALLATION EXECUTION  ######################################
 # Runs the install if the option was selected from the summary menu
-tput sgr0 >&3
+#tput sgr0 >&3
 clear >&3
 reposinstall
 if [ $DEL_TMP_VAR = true ]; then
