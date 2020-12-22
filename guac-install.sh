@@ -353,8 +353,7 @@ yumupdate () {
 echo "begin yum update" >> /tmp/guac-output.txt
 
 # Update OS/packages
-{ yum update -y; } &
-s_echo "y" "${Bold}Updating ${OS_NAME}, please wait...    "; spinner
+yum update -y
 
 baseinstall
 }
