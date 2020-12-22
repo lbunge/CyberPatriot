@@ -12,6 +12,7 @@
 # 	-Read all documentation (wiki) prior to using this script!
 #	-Test prior to deploying on a production system!
 #
+echo "begin script" >> /tmp/guac-output.txt
 ######  PRE-RUN CHECKS  ##############################################
 if ! [ $(id -u) = 0 ]; then echo "This script must be run as sudo or root, try again..."; exit 1; fi
 if ! [ $(getenforce) = "Enforcing" ]; then echo "This script requires SELinux to be active and in \"Enforcing mode\""; exit 1; fi
@@ -26,6 +27,7 @@ set -E
 ######  VARIABLES  ###################################################
 ######################################################################
 
+echo "begin universal variables" >> /tmp/guac-output.txt
 ######  UNIVERSAL VARIABLES  #########################################
 # USER CONFIGURABLE #
 # Generic
@@ -102,6 +104,8 @@ Reset=`tput sgr0`	#${Reset}
 ######  INITIALIZE COMMON VARIABLES  #################################
 # ONLY CHANGE IF NOT WORKING #
 init_vars () {
+echo "begin init_vars" >> /tmp/guac-output.txt
+
 # Get the release version of Guacamole from/for Git
 GUAC_GIT_VER=`curl -s https://raw.githubusercontent.com/apache/guacamole-server/master/configure.ac | grep 'AC_INIT([guacamole-server]*' | awk -F'[][]' -v n=2 '{ print $(2*n) }'`
 PWD=`pwd` # Current directory
@@ -128,6 +132,8 @@ NGINX_URL="https://nginx.org/packages/$OS_NAME_L/$MAJOR_VER/$MACHINE_ARCH/"
 
 ######  SOURCE VARIABLES  ############################################
 src_vars () {
+echo "begin src_vars" >> /tmp/guac-output.txt
+
 # Stable release
 GUAC_VER=${GUAC_STBL_VER}
 GUAC_URL="https://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/"
@@ -165,6 +171,8 @@ exec 3>&1
 ######  PROGRESS SPINNER FUNCTION  ###################################
 # Used to show a process is making progress/running
 spinner () {
+echo "begin spinner" >> /tmp/guac-output.txt
+
 pid=$!
 #Store the background process id in a temp file to use in err_handler
 echo $(jobs -p) > "${VAR_FILE}"
@@ -205,6 +213,8 @@ echo "-1" > "${VAR_FILE}"
 ######  SPECIAL ECHO FUNCTION  #######################################
 # This allows echo to log and stdout (now fd3) while sending all else to log by default via exec
 s_echo () {
+echo "special echo function" >> /tmp/guac-output.txt
+
 # Use first arg $1 to determine if echo skips a line (yes/no)
 # Second arg $2 is the message
 case $1 in
@@ -228,6 +238,8 @@ exec &> "${logfile}"
 ######  ERROR HANDLER FUNCTION  ######################################
 # Called by trap to display/log error info and exit script
 err_handler () {
+echo "err_handler called" >> /tmp/guac-output.txt
+
 EXITCODE=$?
 
 #Read values from temp file used to store cross process values
@@ -282,6 +294,8 @@ trap err_handler ERR SIGINT SIGQUIT
 
 ######  REPOS INSTALLATION  ##########################################
 reposinstall () {
+echo "begin repoinstall" >> /tmp/guac-output.txt
+
 s_echo "n" "${Bold}   ----==== INSTALLING GUACAMOLE ${GUAC_SOURCE} ${GUAC_VER} ====----"
 s_echo "y" "Installing Repos"
 
@@ -336,6 +350,7 @@ yumupdate
 
 ######  YUM UPDATES  #################################################
 yumupdate () {
+echo "begin yum update" >> /tmp/guac-output.txt
 
 # Update OS/packages
 { yum update -y; } &
@@ -346,6 +361,8 @@ baseinstall
 
 ######  INSTALL BASE PACKAGES  #######################################
 baseinstall () {
+echo "begin baseinstall" >> /tmp/guac-output.txt
+
 s_echo "y" "${Bold}Installing Required Dependencies"
 
 # Install Required Packages
@@ -1069,11 +1086,15 @@ sed -i 's/\x1b\[[0-9;]*m\|\x1b[(]B\x1b\[m//g' ${logfile}
 #tput sgr0 >&3
 }
 
+echo "begin installation execution" >> /tmp/guac-output.txt
+
 ######  INSTALLATION EXECUTION  ######################################
 # Runs the install if the option was selected from the summary menu
 #tput sgr0 >&3
 #clear >&3
 reposinstall
+echo "begin install if statement at end" >> /tmp/guac-output.txt
+
 if [ $DEL_TMP_VAR = true ]; then
 	rm "$VAR_FILE"
 fi
