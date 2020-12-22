@@ -83,7 +83,7 @@ GUAC_LAN_IP=$(hostname -I | sed 's/ .*//')
 NGINX_SEC=true
 USE_CSP=true
 
-TERM=dumb
+TERM="xterm"
 # Formats
 Black=`tput setaf 0`	#${Black}
 Red=`tput setaf 1`	#${Red}
