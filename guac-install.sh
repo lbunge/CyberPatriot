@@ -345,16 +345,6 @@ if [ $OS_NAME == "RHEL" ] ; then
 	s_echo "n" "-Enabling ${OS_NAME} optional and extras repos...    "; spinner
 fi
 
-yumupdate
-}
-
-######  YUM UPDATES  #################################################
-yumupdate () {
-echo "begin yum update" >> /tmp/guac-output.txt
-
-# Update OS/packages
-yum update -y
-
 baseinstall
 }
 
