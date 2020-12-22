@@ -345,6 +345,16 @@ if [ $OS_NAME == "RHEL" ] ; then
 	s_echo "n" "-Enabling ${OS_NAME} optional and extras repos...    "; spinner
 fi
 
+yumupdate
+}
+
+######  YUM UPDATES  #################################################
+yumupdate () {
+
+# Update OS/packages
+{ yum update -y; } &
+s_echo "y" "${Bold}Updating ${OS_NAME}, please wait...    "; spinner
+
 baseinstall
 }
 
