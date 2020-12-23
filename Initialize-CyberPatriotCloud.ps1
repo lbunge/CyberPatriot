@@ -14,28 +14,9 @@ function Initialize-CyberPatriotCloud
     [CmdletBinding()]
     Param
     (
-        # Name for Resource Group
-        [Parameter(ValueFromPipelineByPropertyName=$true
-        )]
-        [string]
         $resourceGroupName = "CyberPatriot",
-        
-        # Location in Azure
-        [Parameter(ValueFromPipelineByPropertyName=$true
-        )]
-        [string]
         $resourceGroupLocation = "eastus",
-
-        # Administrator account in VM's
-        [Parameter(ValueFromPipelineByPropertyName=$true
-        )]
-        [string]
         $vmUserName = "CyberAdmin",
-
-        # Administrator password in VM's.
-        [Parameter(ValueFromPipelineByPropertyName=$true
-        )]
-        [string]
         $vmUserPassword = "Cyb3rP@tri0t!"
     )
     Begin
@@ -60,13 +41,21 @@ function Initialize-CyberPatriotCloud
     }
     Process
     {
+        $startTime = Get-Date -Format "HH:mm:ss"
         Write-Host "--------------------  Beginning Initialization  ---------------------" -ForegroundColor Cyan
         Write-Host "This could take a few minutes, feel free to go top off the coffee" -ForegroundColor Cyan
-        New-AzResourceGroup -Name $resourceGroupName -Location $resourceGroupLocation -InformationAction SilentlyContinue
+        Write-Host "Script Start Time: $startTime" -ForegroundColor Cyan
+        Write-Host "" -ForegroundColor Cyan
+        
+        ### Create Resource Group
+        $null = New-AzResourceGroup -Name $resourceGroupName -Location $resourceGroupLocation -InformationAction SilentlyContinue
+        
+        ### Create credential object
         $vmLocalAdminUser = $vmUserName
         $vmLocalAdminSecurePassword = $vmUserPassword | ConvertTo-SecureString -AsPlainText -Force
-        $vmSize = "Standard_D2_v4" # 2-core 8gb RAM
-
+        $cred = New-Object System.Management.Automation.PSCredential ($vmLocalAdminUser, $vmLocalAdminSecurePassword)
+        
+        ### Network Configuration
         $networkName = $resourceGroupName + "-vnet"
         $subnetName = $resourceGroupName + "-subnet"
         $subnetAddressPrefix = "192.168.1.0/24"
@@ -90,6 +79,7 @@ function Initialize-CyberPatriotCloud
             -AddressPrefix $networkAddressPrefix `
             -Subnet $subnet
 
+        ### Network Security Group Configuration
         $nsgRuleHTTP = New-AzNetworkSecurityRuleConfig `
             -Name http-rule `
             -Description "Allow HTTP" `
@@ -117,16 +107,17 @@ function Initialize-CyberPatriotCloud
             -Location $resourceGroupLocation `
             -Name "$resourceGroupName-SG" `
             -SecurityRules $nsgRuleHTTP,$nsgRuleHTTPS
-             
-        $cred = New-Object System.Management.Automation.PSCredential ($vmLocalAdminUser, $vmLocalAdminSecurePassword)
-        $vmhosts = @("Host-Win","Host-Server","Host-Linux","Host-Cisco","Guacamole") # Array of hostnames - Can add more names to create more VM's
 
-        # Build VM's for each image host
+        ### Build VM's for each image host
+        $vmhosts = @("Host-Win","Host-Server","Host-Linux","Host-Cisco","Guacamole") # Array of hostnames - Can add more names to create more VM's
+        $vmSize = "Standard_D2_v4" # 2-core 8gb RAM
         foreach ($vmhost in $vmhosts){
             Write-Progress -Activity "Creating $($vmhosts.count) Virtual Machines" `
                 -Status "Progress:" `
                 -CurrentOperation "Spinning up `"$vmhost`" ($($vmhosts.IndexOf($vmhost)+1)/$($vmhosts.count))" `
                 -PercentComplete ((($vmhosts.IndexOf($vmhost)+1)/$vmhosts.count)*80)
+            
+            ## Specific configuration for Apache Guacamole VM
             if ($vmhost -eq "Guacamole"){
                 $NIC = New-AzNetworkInterface `
                     -Name "$vmhost-nic" `
@@ -144,7 +135,7 @@ function Initialize-CyberPatriotCloud
                     -Offer "CentOS" `
                     -Skus "7.7" `
                     -Version latest
-            } else{
+            } else{     # Configuration for host vm's
                 $NIC = New-AzNetworkInterface `
                     -Name "$vmhost-nic" `
                     -ResourceGroupName $resourceGroupName `
@@ -160,20 +151,63 @@ function Initialize-CyberPatriotCloud
                     -Skus "18.04-LTS" `
                     -Version latest
             }# End if
-                $vm = Set-AzVMOperatingSystem `
-                    -VM $vm `
-                    -Linux `
-                    -ComputerName $vmhost `
-                    -Credential $cred 
-                $vm = Add-AzVMNetworkInterface `
-                    -VM $vm `
-                    -Id $NIC.Id
-                New-AzVM -ResourceGroupName $resourceGroupName -Location $resourceGroupLocation -VM $vm -WarningAction Ignore -InformationAction SilentlyContinue
+            $vm = Set-AzVMOperatingSystem `
+                -VM $vm `
+                -Linux `
+                -ComputerName $vmhost `
+                -Credential $cred 
+            $vm = Add-AzVMNetworkInterface `
+                -VM $vm `
+                -Id $NIC.Id
+
+            ## Create the vm
+            $null = New-AzVM -ResourceGroupName $resourceGroupName -Location $resourceGroupLocation -VM $vm -WarningAction Ignore -InformationAction SilentlyContinue
+        }# End foreach
+
+        Write-Host "-------------------- VM's have been built --------------------" -ForegroundColor Cyan
+        Write-Host "Sending configuration script to Guacamole VM in the background..." -ForegroundColor Cyan
+        Write-Host "Please allow 20-30 mins before accessing your resources." -ForegroundColor Cyan
+        Write-Host "" -ForegroundColor Cyan
+
+        ### Configuration Script for Guacamole VM is pulled from GitHub and sent to the VM for execution
+        $settings = '{"fileUris":["https://raw.githubusercontent.com/lbunge/CyberPatriot/main/guac-install.sh"],
+                    "commandToExecute":"bash ./guac-install.sh"}'
+        $null = Set-AzVMExtension `
+            -ResourceGroupName $resourceGroupName `
+            -Location $resourceGroupLocation `
+            -VMName "Guacamole" `
+            -Name "ConfigureGuacScript" `
+            -Publisher "Microsoft.Azure.Extensions" `
+            -ExtensionType "CustomScript" `
+            -TypeHandlerVersion "2.1" `
+            -SettingString $settings `
+            -AsJob
+        
+        Write-Host "Collecting IP Information from VM's..." -ForegroundColor Cyan
+        Write-Host "" -ForegroundColor Cyan
+
+        ### Collect IP Information
+        $vmInformation = @()
+        foreach ($vmhost in $vmhosts){
+            $data = [PSCustomObject]@{
+                VM      = $vmhost
+                IP      = Get-AzNetworkInterface -Name "$vmhost-nic" -ResourceGroupName $resourceGroupName | 
+                            Select-Object -ExpandProperty IpConfigurations | 
+                            Select-Object -ExpandProperty PrivateIPAddress
+                User    = $vmLocalAdminUser
+                Pass    = $vmUserPassword
+            }
+            $vmInformation += $data
         }
+
+        $endTime = Get-Date -Format "HH:mm:ss"
     }
     End
     {
         Write-Host "-------------------- Initialization is complete! --------------------" -ForegroundColor Cyan
+        Write-Host "Script End Time: $endTime" -ForegroundColor Cyan
+        Write-Host "Total Run Time: $(New-TimeSpan -Start $startTime -End $endTime)" -ForegroundColor Cyan
+        Write-Host "" -ForegroundColor Cyan
         Write-Host "To tear down all the resources once you are finished, run the following:" -ForegroundColor Cyan
         Write-Host "Remove-AzResourceGroup -Name $resourceGroupName -Force -AsJob"
         Write-Host ""
