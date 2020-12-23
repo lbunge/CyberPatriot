@@ -353,7 +353,7 @@ yumupdate () {
 echo "begin yum updates" >> /tmp/guac-output.txt
 
 # Update OS/packages
-yum update -y >> /tmp/guac-output.txt
+yum update -y --exclude=WALinuxAgent* >> /tmp/guac-output.txt
 
 baseinstall
 }
