@@ -27,9 +27,9 @@ echo "xrdb $HOME/.Xresources" >> /home/$newUser/.vnc/xstartup
 echo "startxfce4 &" >> /home/$newUser/.vnc/xstartup
 
 # Ensure the proper permissions are set
-#chown -R $newUser:$newUser /home/$newUser/.vnc
+chown -R $newUser:$newUser /home/$newUser/.vnc
 chmod 0600 /home/$newUser/.vnc/passwd
 chmod +x /home/$newUser/.vnc/xstartup
 
 # Start the VNC server
-sudo vncserver
+sudo -u $newUser vncserver
