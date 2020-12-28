@@ -1,18 +1,4 @@
 #!/bin/bash
-
-url1=$1
-url2=$2
-url3=$3
-newUser=$4
-userPass=$5
-vncPass=${userPass:0:8}
-echo "Url 1 is: $url1" >> /tmp/scriptOutput.txt
-echo "Url 1 is: $url2" >> /tmp/scriptOutput.txt
-echo "Url 1 is: $url3" >> /tmp/scriptOutput.txt
-echo "Username is: $newUser" >> /tmp/scriptOutput.txt
-echo "User Password is: $userPass" >> /tmp/scriptOutput.txt
-echo "VNC Password is: $vncPass" >> /tmp/scriptOutput.txt
-
 # Updates repos and installs dependencies & tightvncserver
 apt update; apt update; apt update  # Need to update repos multiple times
 apt install -y xfce4 xfce4-goodies wget gcc build-essential linux-headers-generic linux-headers-$(uname -r)
