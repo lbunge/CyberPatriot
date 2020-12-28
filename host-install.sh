@@ -11,12 +11,13 @@ echo "Url 1 is: $url2" >> /tmp/scriptOutput.txt
 echo "Url 1 is: $url3" >> /tmp/scriptOutput.txt
 echo "Username is: $newUser" >> /tmp/scriptOutput.txt
 echo "User Password is: $userPass" >> /tmp/scriptOutput.txt
+echo "VNC Password is: $vncPass" >> /tmp/scriptOutput.txt
 
 ### Modifies the host vm's
 
 apt update; apt -y upgrade
-apt-get install -y xfce4 xfce4-goodies
-apt-get install -y tightvncserver
+apt install -y xfce4 xfce4-goodies
+apt install -y tightvncserver
 
 # Create the password for the vnc service
 mkdir /home/$newUser/.vnc
