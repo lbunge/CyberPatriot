@@ -32,4 +32,4 @@ chmod 0600 /home/$newUser/.vnc/passwd
 chmod +x /home/$newUser/.vnc/xstartup
 
 # Start the VNC server
-vncserver
+sudo vncserver
