@@ -24,11 +24,9 @@ chmod +x getplayer-linux
 ./getplayer-linux
 
 # Get the Images from URLs
-mkdir /home/$newUser/Desktop/Images
-cd /home/$newUser/Desktop/Images
-wget $url1
-wget $url2
-wget $url3
+wget $url1 -P /home/$newUser/Desktop/
+wget $url2 -P /home/$newUser/Desktop/
+wget $url3 -P /home/$newUser/Desktop/
 
 # Create the password & config file for the vnc service
 [[ ! -d /home/$newUser/.vnc ]] && mkdir /home/$newUser/.vnc
