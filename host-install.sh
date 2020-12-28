@@ -15,7 +15,7 @@ echo "VNC Password is: $vncPass" >> /tmp/scriptOutput.txt
 
 ### Modifies the host vm's
 
-apt update
+apt update; apt update; apt update
 apt install -y xfce4 xfce4-goodies
 apt install -y tightvncserver
 
