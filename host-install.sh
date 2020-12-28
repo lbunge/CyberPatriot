@@ -1,8 +1,8 @@
-url1 = $1
-url2 = $2
-url3 = $3
-newUser = $4
-userPass = $5
+url1=$1
+url2=$2
+url3=$3
+newUser=$4
+userPass=$5
 
 echo "Url 1 is: $url1" >> /tmp/scriptOutput.txt
 echo "Url 1 is: $url2" >> /tmp/scriptOutput.txt
