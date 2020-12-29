@@ -7,7 +7,7 @@
    on an internal network with the Guacamole machine utilizing Apache Guacamole with a public IP address to connect to
    the internal machines.
 .EXAMPLE
-   Initialize-CyberPatriotCloud -resourceGroupName CyberPatriot -resourceGroupLocation eastus -vmUserName CyberAdmin -vmUserPassword SomeS3cr3tP@ssw0rd!
+   Initialize-CyberPatriotCloud -resourceGroupName CyberPatriot -resourceGroupLocation eastus -vmLocalAdminUser CyberAdmin -vmUserPassword SomeS3cr3tP@ssw0rd!
 #>
 function Initialize-CyberPatriotCloud
 {
@@ -16,8 +16,11 @@ function Initialize-CyberPatriotCloud
     (
         $resourceGroupName = "CyberPatriot",
         $resourceGroupLocation = "eastus",
-        $vmUserName = "CyberAdmin",
-        $vmUserPassword = "Cyb3rP@tri0t!"
+        $vmLocalAdminUser = "CyberAdmin",
+        $vmUserPassword = "Cyb3rP@tri0t!",
+        $url1 = 'https://files.constantcontact.com/b6eda340101/23cb064f-6d36-4146-9472-0ba2bc586728.pdf',
+        $url2 = 'hhttps://s3.amazonaws.com/UserGuides/Install_7zip_2019.pdf',
+        $url3 = 'https://s3.amazonaws.com/UserGuides/Install_WinMD5_2019.pdf'
     )
     Begin
     {
@@ -45,13 +48,12 @@ function Initialize-CyberPatriotCloud
         Write-Host "--------------------  Beginning Initialization  ---------------------" -ForegroundColor Cyan
         Write-Host "This could take a few minutes, feel free to go top off the coffee" -ForegroundColor Cyan
         Write-Host "Script Start Time: $startTime" -ForegroundColor Cyan
-        Write-Host "" -ForegroundColor Cyan
+        Write-Host "`n`n`n`n" -ForegroundColor Cyan     # Adding lines for the progress box
         
         ### Create Resource Group
         $null = New-AzResourceGroup -Name $resourceGroupName -Location $resourceGroupLocation -InformationAction SilentlyContinue
         
         ### Create credential object
-        $vmLocalAdminUser = $vmUserName
         $vmLocalAdminSecurePassword = $vmUserPassword | ConvertTo-SecureString -AsPlainText -Force
         $cred = New-Object System.Management.Automation.PSCredential ($vmLocalAdminUser, $vmLocalAdminSecurePassword)
         
@@ -63,7 +65,7 @@ function Initialize-CyberPatriotCloud
         $publicIP = New-AzPublicIpAddress `
             -ResourceGroupName $resourceGroupName `
             -Location $resourceGroupLocation `
-            -Name "$resourceGroupName-PulbicIP" `
+            -Name "$resourceGroupName-PublicIP" `
             -DomainNameLabel "$($resourceGroupName.ToLower())-$(Get-Random)"`
             -AllocationMethod Static `
             -IdleTimeoutInMinutes 4 `
@@ -150,7 +152,7 @@ function Initialize-CyberPatriotCloud
                     -Offer "UbuntuServer" `
                     -Skus "18.04-LTS" `
                     -Version latest
-            }# End if
+            }# End host config if
             $vm = Set-AzVMOperatingSystem `
                 -VM $vm `
                 -Linux `
@@ -165,40 +167,60 @@ function Initialize-CyberPatriotCloud
         }# End foreach
 
         Write-Host "-------------------- VM's have been built --------------------" -ForegroundColor Cyan
-        Write-Host "Sending configuration script to Guacamole VM in the background..." -ForegroundColor Cyan
+        Write-Host "Sending configuration scripts to VM's in the background..." -ForegroundColor Cyan
         Write-Host "Please allow 20-30 mins before accessing your resources." -ForegroundColor Cyan
         Write-Host "" -ForegroundColor Cyan
-
-        ### Configuration Script for Guacamole VM is pulled from GitHub and sent to the VM for execution
-        $settings = '{"fileUris":["https://raw.githubusercontent.com/lbunge/CyberPatriot/main/guac-install.sh"],
-                    "commandToExecute":"bash ./guac-install.sh"}'
-        $null = Set-AzVMExtension `
-            -ResourceGroupName $resourceGroupName `
-            -Location $resourceGroupLocation `
-            -VMName "Guacamole" `
-            -Name "ConfigureGuacScript" `
-            -Publisher "Microsoft.Azure.Extensions" `
-            -ExtensionType "CustomScript" `
-            -TypeHandlerVersion "2.1" `
-            -SettingString $settings `
-            -AsJob
         
+        ### Prepare and upload the execution script for each vm
+        foreach ($vmhost in $vmhosts) {
+            ## Configuration Script for Guacamole VM is pulled from GitHub and sent to the VM for execution
+            if ($vmhost -eq "Guacamole"){
+                $settings = '{"fileUris":["https://raw.githubusercontent.com/lbunge/CyberPatriot/main/guac-install.sh"],
+                        "commandToExecute":"bash ./guac-install.sh"}'
+                $null = Set-AzVMExtension `
+                    -ResourceGroupName $resourceGroupName `
+                    -Location $resourceGroupLocation `
+                    -VMName "Guacamole" `
+                    -Name "ConfigureGuacScript" `
+                    -Publisher "Microsoft.Azure.Extensions" `
+                    -ExtensionType "CustomScript" `
+                    -TypeHandlerVersion "2.1" `
+                    -SettingString $settings `
+                    -AsJob
+            }# End Guacamole if
+            ## Configuration Script for Host VM's is pulled from GitHub and sent to the VM as a job
+            $settings = "{`"fileUris`":[`"https://raw.githubusercontent.com/lbunge/CyberPatriot/main/host-install.sh`"],
+                    `"commandToExecute`":`"bash ./host-install.sh $url1 $url2 $url3 $vmLocalAdminUser $vmUserPassword >> /tmp/scriptOutput.txt`"}"
+            $null = Set-AzVMExtension `
+                -ResourceGroupName $resourceGroupName `
+                -Location $resourceGroupLocation `
+                -VMName "Host-Win" `
+                -Name "ConfigureHostScript" `
+                -Publisher "Microsoft.Azure.Extensions" `
+                -ExtensionType "CustomScript" `
+                -TypeHandlerVersion "2.1" `
+                -SettingString $settings `
+                -AsJob
+        }# End foreach
+
         Write-Host "Collecting IP Information from VM's..." -ForegroundColor Cyan
         Write-Host "" -ForegroundColor Cyan
 
-        ### Collect IP Information
+        ### Collect IP Information to display for Guacamole input
         $vmInformation = @()
         foreach ($vmhost in $vmhosts){
-            $data = [PSCustomObject]@{
-                VM      = $vmhost
-                IP      = Get-AzNetworkInterface -Name "$vmhost-nic" -ResourceGroupName $resourceGroupName | 
-                            Select-Object -ExpandProperty IpConfigurations | 
-                            Select-Object -ExpandProperty PrivateIPAddress
-                User    = $vmLocalAdminUser
-                Pass    = $vmUserPassword
-            }
-            $vmInformation += $data
-        }
+            if ($vmhost -ne "Guacamole"){
+                $data = [PSCustomObject]@{
+                    VM              = $vmhost
+                    IP              = Get-AzNetworkInterface -Name "$vmhost-nic" -ResourceGroupName $resourceGroupName | 
+                                        Select-Object -ExpandProperty IpConfigurations | 
+                                        Select-Object -ExpandProperty PrivateIPAddress
+                    "VNC Username"  = $vmLocalAdminUser
+                    "VNC Password"  = $(($vmUserPassword).Substring(0,8))
+                }# End data
+                $vmInformation += $data     # Add object to array
+            }# End if
+        }# End foreach
 
         $endTime = Get-Date -Format "HH:mm:ss"
     }
@@ -213,7 +235,10 @@ function Initialize-CyberPatriotCloud
         Write-Host ""
         Write-Host "To access your resources online, go to the following url:" -ForegroundColor Cyan
         Write-Host "https://$((Get-AzPublicIpAddress -name $publicIP.Name -ResourceGroupName $resourceGroupName).DnsSettings.Fqdn)"
+        $vmInformation
+
     }
 }
+
 
 Initialize-CyberPatriotCloud
