@@ -194,7 +194,7 @@ function Initialize-CyberPatriotCloud
             $null = Set-AzVMExtension `
                 -ResourceGroupName $resourceGroupName `
                 -Location $resourceGroupLocation `
-                -VMName "Host-Win" `
+                -VMName "$vmhost" `
                 -Name "ConfigureHostScript" `
                 -Publisher "Microsoft.Azure.Extensions" `
                 -ExtensionType "CustomScript" `
