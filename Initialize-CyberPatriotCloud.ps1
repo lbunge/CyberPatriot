@@ -240,5 +240,5 @@ function Initialize-CyberPatriotCloud
     }
 }
 
-
+# Call function defaults
 Initialize-CyberPatriotCloud
