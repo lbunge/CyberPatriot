@@ -18,9 +18,10 @@ function Initialize-CyberPatriotCloud
         $resourceGroupLocation = "eastus",
         $vmLocalAdminUser = "CyberAdmin",
         $vmUserPassword = "Cyb3rP@tri0t!",
-        $url1 = 'https://files.constantcontact.com/b6eda340101/23cb064f-6d36-4146-9472-0ba2bc586728.pdf',
-        $url2 = 'hhttps://s3.amazonaws.com/UserGuides/Install_7zip_2019.pdf',
-        $url3 = 'https://s3.amazonaws.com/UserGuides/Install_WinMD5_2019.pdf'
+        $url1 = 'https://cpxiii.s3.amazonaws.com/cpxiii_r3/cpxiii_r3_p_sh_win10.zip',
+        $url2 = 'https://cpxiii.s3.amazonaws.com/cpxiii_r3/cpxiii_r3_p_h_server2019.zip',
+        $url3 = 'https://cpxiii.s3.amazonaws.com/cpxiii_r3/cpxiii_r3_psms_h_ubu18.zip',
+        $url4 = 'https://cpxiii.s3.amazonaws.com/cpxiii_r3/cpxiii_r3_pg_h_deb9.zip'
     )
     Begin
     {
@@ -111,7 +112,7 @@ function Initialize-CyberPatriotCloud
             -SecurityRules $nsgRuleHTTP,$nsgRuleHTTPS
 
         ### Build VM's for each image host
-        $vmhosts = @("Host-Win","Host-Server","Host-Linux","Host-Cisco","Guacamole") # Array of hostnames - Can add more names to create more VM's
+        $vmhosts = @("Host-Win","Host-Server","Host-Ubuntu","Host-Cisco", "Host-Debian","Guacamole") # Array of hostnames - Can add more names to create more VM's
         $vmSize = "Standard_D2_v4" # 2-core 8gb RAM
         foreach ($vmhost in $vmhosts){
             Write-Progress -Activity "Creating $($vmhosts.count) Virtual Machines" `
@@ -190,7 +191,7 @@ function Initialize-CyberPatriotCloud
             }# End Guacamole if
             ## Configuration Script for Host VM's is pulled from GitHub and sent to the VM as a job
             $settings = "{`"fileUris`":[`"https://raw.githubusercontent.com/lbunge/CyberPatriot/main/host-install.sh`"],
-                    `"commandToExecute`":`"bash ./host-install.sh $url1 $url2 $url3 $vmLocalAdminUser $vmUserPassword >> /tmp/scriptOutput.txt`"}"
+                    `"commandToExecute`":`"bash ./host-install.sh $url1 $url2 $url3 $url4 $vmLocalAdminUser $vmUserPassword >> /tmp/scriptOutput.txt`"}"
             $null = Set-AzVMExtension `
                 -ResourceGroupName $resourceGroupName `
                 -Location $resourceGroupLocation `
