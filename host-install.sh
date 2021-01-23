@@ -3,9 +3,8 @@
 url1=$1
 url2=$2
 url3=$3
-url4=$4
-newUser=$5
-userPass=$6
+newUser=$4
+userPass=$5
 vncPass=${userPass:0:8}
 
 # Updates repos and installs dependencies & tightvncserver
@@ -22,7 +21,6 @@ chmod +x getplayer-linux
 wget $url1 -P /home/$newUser/Desktop/
 wget $url2 -P /home/$newUser/Desktop/
 wget $url3 -P /home/$newUser/Desktop/
-wget $url4 -P /home/$newUser/Desktop/
 chown -R $newUser:$newUser /home/$newUser/Desktop   # Apply permissions
 
 # Create the password & config file for the vnc service

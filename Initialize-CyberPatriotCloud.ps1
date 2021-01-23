@@ -20,8 +20,7 @@ function Initialize-CyberPatriotCloud
         $vmUserPassword = "Cyb3rP@tri0t!",
         $url1 = 'https://cpxiii.s3.amazonaws.com/cpxiii_r3/cpxiii_r3_p_sh_win10.zip',
         $url2 = 'https://cpxiii.s3.amazonaws.com/cpxiii_r3/cpxiii_r3_p_h_server2019.zip',
-        $url3 = 'https://cpxiii.s3.amazonaws.com/cpxiii_r3/cpxiii_r3_psms_h_ubu18.zip',
-        $url4 = 'https://cpxiii.s3.amazonaws.com/cpxiii_r3/cpxiii_r3_pg_h_deb9.zip'
+        $url3 = 'https://cpxiii.s3.amazonaws.com/cpxiii_r3/cpxiii_r3_psms_h_ubu18.zip'
     )
     Begin
     {
@@ -67,7 +66,7 @@ function Initialize-CyberPatriotCloud
             -ResourceGroupName $resourceGroupName `
             -Location $resourceGroupLocation `
             -Name "$resourceGroupName-PublicIP" `
-            -DomainNameLabel "$($resourceGroupName.ToLower())-$(Get-Random)"`
+            -DomainNameLabel "$($resourceGroupName.ToLower())" `
             -AllocationMethod Static `
             -IdleTimeoutInMinutes 4 `
             -WarningAction Ignore
@@ -191,7 +190,7 @@ function Initialize-CyberPatriotCloud
             }# End Guacamole if
             ## Configuration Script for Host VM's is pulled from GitHub and sent to the VM as a job
             $settings = "{`"fileUris`":[`"https://raw.githubusercontent.com/lbunge/CyberPatriot/main/host-install.sh`"],
-                    `"commandToExecute`":`"bash ./host-install.sh $url1 $url2 $url3 $url4 $vmLocalAdminUser $vmUserPassword >> /tmp/scriptOutput.txt`"}"
+                    `"commandToExecute`":`"bash ./host-install.sh $url1 $url2 $url3 $vmLocalAdminUser $vmUserPassword >> /tmp/scriptOutput.txt`"}"
             $null = Set-AzVMExtension `
                 -ResourceGroupName $resourceGroupName `
                 -Location $resourceGroupLocation `
